@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Below is a **clear and complete explanation** of:
 
 ✅ How much **machine learning** is really used in your project
@@ -244,3 +245,7 @@ I can give:
 Just ask:
 
 👉 **"Give me the full ML pipeline."**
+=======
+# Supply-Chain-Route-Predictor
+A GNN based Supply chain Route pridictor model
+>>>>>>> ac762f550279ac111905f3a6e1cce102b9a08866
