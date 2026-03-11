@@ -136,7 +136,7 @@ supply-chain-gnn/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/supply-chain-gnn.git
+git clone https://github.com/a34656/supply-chain-gnn.git
 cd supply-chain-gnn
 
 # 2. Install dependencies
