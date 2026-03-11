@@ -1,251 +1,298 @@
-<<<<<<< HEAD
-Below is a **clear and complete explanation** of:
+# Hybrid GNN for Supply Chain Demand Forecasting
 
-✅ How much **machine learning** is really used in your project
-✅ What parts are ML vs. non-ML
-✅ What exactly the **Graph Transformer** contributes
-✅ Why you cannot build this system with simple algorithms
+> A novel Graph Neural Network architecture combining local (GATv2) and global (TransformerConv) attention for next-day sales prediction in FMCG supply chains.
 
-I’ll keep it extremely easy to understand.
-
----
-
-# ⭐ **1. How Much Machine Learning Does Your Supply Chain Route Predictor Use?**
-
-**A lot.**
-This is not a simple “shortest path” problem — it’s a **prediction** problem.
-
-Your system uses ML for **four separate tasks**:
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)](https://pytorch.org)
+[![PyG](https://img.shields.io/badge/PyTorch_Geometric-2.3%2B-red)](https://pyg.org)
+[![Dataset](https://img.shields.io/badge/Dataset-SCG%20(Wasi%20et%20al.%2C%202025)-green)](https://github.com/CIOL-SUST/SCG)
 
 ---
 
-## **🔷 ML Task 1 — Predict Reliability of a Trade Route**
+## Overview
 
-Features used:
+This project extends the [SCG benchmark dataset](https://github.com/CIOL-SUST/SCG) (Wasi et al., 2025) with a custom hybrid GNN architecture and a temporally-aware data pipeline for supply chain demand forecasting. The model predicts next-day sales orders for 28 active FMCG products simultaneously using a graph of product relationships.
 
-* multi-year trade volume volatility
-* risk indicators
-* political stability
-* port performance
-
-ML output:
-
-* probability of delay
-* probability of disruption
-* reliability score (0–1)
-
-➡️ **This cannot be done with simple algorithms.**
+**Key result:** R² = 0.68, NRMSE = 0.071 — outperforming all baselines including LSTM, GAT-only, and Transformer-only models on the SCG dataset.
 
 ---
 
-## **🔷 ML Task 2 — Predict Transport Time**
+## Architecture
 
-Features used:
+The core contribution is a **Hybrid GNN** that runs two parallel attention paths and fuses them:
 
-* distance
-* port congestion
-* trade frequency
-* infrastructure score
-* historical average shipping times
+```
+Input (28 features per node)
+        │
+  [Input Projection]  Linear(28 → 64)
+        │
+   ┌────┴────┐
+   │         │
+[GATv2]  [TransformerConv]       ← 2 layers each, 4 heads
+Local     Global attention
+   │         │
+   └────┬────┘
+   [Concatenate]  → (128,)
+   [Fusion Layer] LayerNorm + GELU + Dropout
+   [Output Head]  Linear → 1
+        │
+   Predicted sales (next day)
+```
 
-ML output:
-
-* expected delivery time (days)
-
-➡️ Better than simple speed × distance
-➡️ Learns patterns like:
-
-* China → Africa often delayed
-* Europe → India usually stable
-
----
-
-## **🔷 ML Task 3 — Predict Capacity of a Route**
-
-Features used:
-
-* trade volume
-* container throughput
-* port size
-* number of direct shipping lanes
-
-ML output:
-
-* how many goods can flow through reliably
-* ability to meet demand
+- **GATv2 path** — captures local neighbourhood effects (products sharing the same storage location)
+- **TransformerConv path** — captures global patterns across the entire product graph
+- **Fusion** — simple concatenation + linear projection learns which path matters more per context
 
 ---
 
-## **🔷 ML Task 4 — Recommend Alternate Backup Routes**
+## Key Findings
 
-This is a combination of:
+### 1. Weekly temporal cycles dominate daily signals
 
-* graph search algorithms
-* ML-predicted risk & time for each edge
-* Graph Transformer reasoning
+Analysis of the SCG dataset revealed:
 
-➡️ A pure algorithm cannot consider dozens of features
-➡️ ML allows **intelligent re-routing**
+```
+Lag-1 autocorrelation (today → tomorrow):     0.133  (weak)
+Lag-7 autocorrelation (same day last week):   0.389  (3× stronger)
+```
 
----
+This motivated a **7-day sliding window** input that improved R² from 0.50 → 0.68 (+36%).
 
-# ⭐ 2. How Does a **Graph Transformer** Help the ML?
+### 2. Storage Location edges outperform Plant edges
 
-A Graph Transformer is the **brain** of the entire project.
+```
+Plant edges (paper default):      R² = 0.50
+Storage Location edges (ours):    R² = 0.68
+```
 
-### 🔥 It allows the model to learn **patterns in global trade networks**, such as:
+Products sharing storage locations have stronger demand correlations than products sharing manufacturing plants.
 
-* which countries depend on which
-* which clusters of countries trade heavily
-* which regions are unstable
-* how a disruption in one node affects others
+### 3. 12 of 40 products are near-zero and distort metrics
 
-This is impossible with an MLP or CNN — only GNNs or Graph Transformers can do it.
+Products with >80% zero sales were identified and excluded from evaluation. Including them artificially inflates R² because predicting zero for always-zero products looks like a good prediction.
 
----
+### 4. Graph structure consistently outperforms no-graph baseline
 
-# ⭐ **3. What Exactly is a Graph Transformer Doing?**
-
-### ✔ **Input**
-
-You give it a graph:
-
-### **Nodes (countries)**
-
-With features like:
-
-* risk index
-* logistics score
-* GDP
-* infrastructure score
-
-### **Edges (trade relationships)**
-
-With features like:
-
-* trade volume
-* distance
-* shipping time
-* port congestion
-* volatility
+```
+LSTM (no graph):      R² = 0.511
+GAT Only:             R² = 0.573
+Transformer Only:     R² = 0.581
+Hybrid GNN (ours):    R² = 0.676  ← best
+```
 
 ---
 
-### ✔ **Graph Transformer Operation**
+## Results
 
-It does:
-
-### **Step 1 — Message Passing**
-
-Each country sends information to its neighbors:
-
-* “I am stable/unstable”
-* “I trade a lot with you”
-* “I am congested this month”
-
-### **Step 2 — Attention**
-
-The Transformer decides:
-
-> “Which neighbors matter more for predicting risk/time?”
-
-This is **dynamic**, not fixed like classic GNNs.
-
-Example:
-
-* China → India has high attention
-* Brazil → India might have low attention
+| Model | R² | RMSE (scaled) | NRMSE |
+|---|---|---|---|
+| **Hybrid GNN (ours)** | **0.676** | **0.373** | **0.071** |
+| Transformer Only | 0.581 | 0.424 | 0.081 |
+| GAT Only | 0.573 | 0.429 | 0.082 |
+| LSTM (no graph) | 0.511 | 0.458 | 0.088 |
+| Product Mean Baseline | 0.472 | — | — |
+| Persistence (today=tomorrow) | 0.128 | — | — |
 
 ---
 
-### **Step 3 — Aggregation**
+## Dataset
 
-It collects important information from neighbors.
+This project uses the **SCG dataset** from:
 
----
+> Wasi, A.T., Islam, M.S., Akib, A.R., & Bappy, M.M. (2025). *Graph Neural Networks in Supply Chain Analytics and Optimization: Concepts, Perspectives, Dataset and Benchmarks.* arXiv:2411.08550
 
-### **Step 4 — Prediction**
-
-For each **edge**, it predicts:
-
-* risk (probability)
-* time (number)
-* capacity (amount)
-
-So your model becomes an **intelligent supply chain simulation engine**.
+- **Source:** Leading FMCG company in Bangladesh
+- **Period:** January 1, 2023 – August 9, 2023 (221 days)
+- **Products:** 40 SKUs (28 active after filtering)
+- **Features:** Production, Sales Orders, Delivery to Distributors, Factory Issues
+- **Dataset repo:** https://github.com/CIOL-SUST/SCG
 
 ---
 
-# ⭐ **4. How Much ML Work Do YOU Have To Do?**
+## Project Structure
 
-You need to build:
-
----
-
-### ✔ ML Work You Must Implement
-
-1. **Data preparation** (merging datasets)
-2. **Graph construction** (PyTorch Geometric or DGL)
-3. **Model definition** (Graph Transformer)
-4. **Training loop** (predict reliability/time/capacity)
-5. **Evaluation metrics**
-6. **Deployment into a web app**
-
-This is a **true ML project**, not a toy.
-
----
-
-# ⭐ **5. Why Not Use Simple Algorithms Instead of ML?**
-
-If you only want **shortest path**, you can use Floyd–Warshall.
-
-But your goal includes:
-
-### 🚫 reliability (requires probability modeling)
-
-### 🚫 risk (requires prediction)
-
-### 🚫 dynamic routing under disruption
-
-### 🚫 multi-feature reasoning
-
-### 🚫 global trade patterns
-
-These cannot be solved using rules.
-
-Only **machine learning + Graph Transformers** can learn these patterns.
+```
+supply-chain-gnn/
+├── data/                          # Place SCG dataset files here
+│   ├── NodesIndex.csv
+│   ├── Edges (Storage Location).csv
+│   ├── Edges (Plant).csv
+│   ├── Edges (Product Group).csv
+│   ├── Sales Order.csv
+│   ├── Production .csv
+│   ├── Factory Issue.csv
+│   └── Delivery To distributor.csv
+│
+├── supply_chain_gnn.ipynb         # Main notebook (run top to bottom)
+│
+├── baselines.py                   # Standalone baseline training script
+│
+└── README.md
+```
 
 ---
 
-# ⭐ **6. Summary: ML + Graph Transformers in your Project**
+## Installation
 
-| Component              | ML involvement | Why ML is needed                |
-| ---------------------- | -------------- | ------------------------------- |
-| Reliability prediction | ⭐⭐⭐⭐⭐          | Requires probabilistic modeling |
-| Time estimation        | ⭐⭐⭐⭐           | Non-linear patterns             |
-| Capacity prediction    | ⭐⭐⭐⭐           | Trade volume is dynamic         |
-| Alternate route search | ⭐⭐⭐            | Hybrid ML + graph search        |
-| App interface          | ⭐              | Deployment only                 |
+```bash
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/supply-chain-gnn.git
+cd supply-chain-gnn
 
-➡️ **Machine Learning is at the core (70% of the system).**
-➡️ **Graph Transformer is the main model.**
+# 2. Install dependencies
+pip install torch torchvision torchaudio
+pip install torch-geometric
+pip install pandas numpy scikit-learn matplotlib seaborn jupyter
+```
+
+**Tested with:**
+- Python 3.9+
+- PyTorch 2.0+
+- PyTorch Geometric 2.3+
+- CUDA 11.8 (optional, CPU also works)
 
 ---
 
-# ⭐ If You Want
+## Usage
 
-I can give:
+### Option A — Jupyter Notebook (recommended)
 
-📌 Full ML workflow
-📌 Graph Transformer architecture code (PyTorch Geometric)
-📌 Dataset merging pipeline
-📌 Training code
-📌 Web/app final deployment steps (FastAPI + React)
+```bash
+jupyter notebook supply_chain_gnn.ipynb
+```
 
-Just ask:
+Update `DATA_DIR` in Cell 2 to point to your data folder:
+```python
+DATA_DIR = r'path/to/your/data'
+```
 
-👉 **"Give me the full ML pipeline."**
-=======
-# Supply-Chain-Route-Predictor
-A GNN based Supply chain Route pridictor model
->>>>>>> ac762f550279ac111905f3a6e1cce102b9a08866
+Then run all cells top to bottom. Cell order matters:
+```
+Cell 1  → Imports
+Cell 2  → Data pipeline (edges, features, 7-day window)
+Cell 3  → Scaling (train-only fit, no leakage)
+Cell 4  → Build graph snapshots
+Cell 5  → Model definitions
+Cell 6  → Training helpers
+Cell 7  → Train all 4 models
+Cell 8  → Results table
+Cell 9  → Visualizations
+Cell 10 → Save predictions
+```
+
+### Option B — Baselines script
+
+```bash
+python baselines.py
+```
+
+---
+
+## Data Pipeline
+
+```
+221 days × 40 products × 4 features
+        ↓
+Remove 12 dead products (>80% zero sales)
+        ↓
+221 days × 28 products × 4 features
+        ↓
+7-day sliding window
+        ↓
+213 samples × 28 products × 28 features  (7 days × 4 features)
+        ↓
+80/20 temporal split
+        ↓
+Train: 170 snapshots  |  Test: 43 snapshots
+```
+
+**Important:** The train/test split is strictly temporal — the model is always trained on earlier data and tested on later data. No shuffling.
+
+---
+
+## Graph Construction
+
+Nodes are products. Edges connect products sharing the same **storage location** (3,046 edges across 28 active nodes). Self-loops are added so each node aggregates its own features. Edge weights are degree-normalized.
+
+```python
+# Storage Location edges — best performing edge type
+edges_df = pd.read_csv('Edges (Storage Location).csv')
+
+# Self-loops added for all nodes
+from torch_geometric.utils import add_self_loops
+ei_tensor, ew_tensor = add_self_loops(ei_tensor, ew_tensor,
+                                       fill_value=1.0, num_nodes=N_NODES)
+```
+
+Edge type comparison:
+
+| Edge Type | Edges | Isolated Nodes | R² |
+|---|---|---|---|
+| Storage Location | 3,046 | 0 | **0.68** |
+| Plant | 1,647 | 5 | 0.50 |
+| Product Group | 188 | 0 | not tested |
+
+---
+
+## Model Configuration
+
+```python
+# Hybrid GNN — best model
+HybridGraphModel(
+    in_channels    = 28,    # 7 days × 4 features
+    hidden_channels= 64,
+    num_layers     = 2,
+    dropout        = 0.4
+)
+
+# Training
+optimizer = AdamW(lr=3e-4, weight_decay=1e-5)
+scheduler = ReduceLROnPlateau(patience=10)
+max_epochs = 200
+patience   = 40   # early stopping
+```
+
+---
+
+## Comparison with Original Paper
+
+The SCG paper (Wasi et al., 2025) benchmarks standard temporal GNNs with default hyperparameters and Plant edges. This work extends it with:
+
+| | SCG Paper | This Work |
+|---|---|---|
+| Architecture | DCRNN, TGCN, GConvGRU (off-the-shelf) | Custom Hybrid GNN (novel) |
+| Input | Single-day snapshot (4 features) | 7-day window (28 features) |
+| Edge type | Plant edges only | Storage Location (empirically chosen) |
+| Dead product analysis | Not addressed | 12 products identified and excluded |
+| GNN improvement over LSTM | ~9% RMSE reduction | ~18% RMSE reduction |
+
+---
+
+## Citation
+
+If you use this code, please cite the original dataset paper:
+
+```bibtex
+@article{wasi2025scg,
+  title={Graph Neural Networks in Supply Chain Analytics and Optimization:
+         Concepts, Perspectives, Dataset and Benchmarks},
+  author={Wasi, Azmine Toushik and Islam, MD Shafikul and
+          Akib, Adipto Raihan and Bappy, Mahathir Mohammad},
+  journal={arXiv preprint arXiv:2411.08550},
+  year={2025}
+}
+```
+
+---
+
+## License
+
+This project is released under the MIT License. The SCG dataset is available under CC BY 4.0 at [DOI: 10.5281/zenodo.13652826](https://doi.org/10.5281/zenodo.13652826).
+
+---
+
+## Acknowledgements
+
+- SCG dataset by Wasi et al. (SUST & LSU)
+- [PyTorch Geometric](https://pyg.org) for GNN implementations
+- GATv2: Brody et al. (2022), TransformerConv: Shi et al. (2021)
