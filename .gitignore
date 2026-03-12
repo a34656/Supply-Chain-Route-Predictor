@@ -1,0 +1,126 @@
+# ═══════════════════════════════════════════════════════════════
+# .gitignore
+# Supply Chain + Energy Forecasting — Hybrid GNN Research Project
+# ═══════════════════════════════════════════════════════════════
+
+
+# ── Python ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ── Virtual Environments ─────────────────────────────────────────
+sales3/
+venv/
+env/
+.env/
+.venv/
+ENV/
+scg-gnn/
+**/site-packages/
+
+# ── Jupyter Notebooks ────────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.ipynb_checkpoints
+
+# ── Dataset Files (too large for GitHub) ─────────────────────────
+# SCG dataset
+data/raw/
+*.csv
+!results/*.csv                  # keep results CSVs
+!data/sample/*.csv              # keep sample/demo CSVs
+
+# UCI Electricity
+LD2011_2014.txt
+LD2011_2014.txt.zip
+uci_electricity/
+
+# METR-LA
+metr-la.h5
+adj_mx.pkl
+metr_la/
+
+# ── Model Checkpoints & Weights ──────────────────────────────────
+*.pt
+*.pth
+*.ckpt
+checkpoints/
+saved_models/
+runs/
+
+# ── Training Logs & Outputs ──────────────────────────────────────
+logs/
+*.log
+wandb/
+mlruns/
+lightning_logs/
+
+# ── IDE & Editor ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Windows ──────────────────────────────────────────────────────
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ── Environment Variables ────────────────────────────────────────
+.env
+.env.local
+*.env
+
+# ── Temp & Cache ─────────────────────────────────────────────────
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Large Output Files ───────────────────────────────────────────
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# ── Figures (optional — uncomment to exclude plots) ──────────────
+# results/figures/*.png
+# results/figures/*.pdf
+
+# ═══════════════════════════════════════════════════════════════
+# WHAT IS TRACKED (kept in git)
+# ═══════════════════════════════════════════════════════════════
+# ✅ src/*.py              model + pipeline code
+# ✅ notebooks/*.ipynb     your experiment notebooks
+# ✅ results/metrics*.csv  final numbers
+# ✅ results/figures/*.png plots and diagrams
+# ✅ README.md
+# ✅ requirements.txt
+# ✅ .gitignore
+# ✅ data/sample/          small demo data if any
+# ═══════════════════════════════════════════════════════════════

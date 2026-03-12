@@ -1,2 +1,133 @@
-pandas
-chardet
+# requirements.txt
+# Supply Chain + Energy Forecasting - Hybrid GNN Research Project
+# Author: a34656 | Dataset: SCG (Wasi et al. 2025) + UCI Electricity
+
+# Core Scientific Stack
+#numpy>=1.24.0
+#pandas>=2.0.0
+#scipy>=1.10.0
+
+# Machine Learning
+#scikit-learn>=1.3.0
+
+# Deep Learning - PyTorch
+# Install PyTorch manually BEFORE running pip install -r requirements.txt
+# CPU only:    pip install torch torchvision torchaudio
+# CUDA 11.8:   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# CUDA 12.1:   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+
+# Graph Neural Networks - PyTorch Geometric
+# Install PyG manually BEFORE running pip install -r requirements.txt
+# pip install torch-geometric
+#torch-geometric>=2.3.0
+
+# Time Series Analysis
+#statsmodels>=0.14.0
+
+# Data Loading
+#h5py>=3.9.0
+#gdown>=4.7.0
+
+# Visualization
+#matplotlib>=3.7.0
+#seaborn>=0.12.0
+
+# Notebook Environment
+#jupyter>=1.0.0
+#ipykernel>=6.25.0
+#tqdm>=4.65.0
+
+# Utilities
+#requests>=2.31.0
+#urllib3>=2.0.0
+
+
+
+aiohappyeyeballs==2.6.1
+aiohttp==3.13.3
+aiosignal==1.4.0
+asttokens==3.0.1
+async-timeout==5.0.1
+attrs==25.4.0
+beautifulsoup4==4.14.3
+certifi==2026.1.4
+chardet==5.2.0
+charset-normalizer==3.4.4
+colorama==0.4.6
+comm==0.2.3
+contourpy==1.3.0
+cycler==0.12.1
+Cython==3.2.4
+debugpy==1.8.17
+decorator==4.4.2
+et_xmlfile==2.0.0
+exceptiongroup==1.3.1
+executing==2.2.1
+filelock==3.19.1
+fonttools==4.60.2
+frozenlist==1.8.0
+fsspec==2025.10.0
+gdown==5.2.1
+idna==3.11
+importlib_metadata==8.7.0
+importlib_resources==6.5.2
+ipykernel==6.31.0
+ipython==8.18.1
+jedi==0.19.2
+Jinja2==3.1.6
+joblib==1.5.3
+jupyter_client==8.6.3
+jupyter_core==5.8.1
+kiwisolver==1.4.7
+MarkupSafe==2.1.5
+matplotlib==3.9.4
+matplotlib-inline==0.2.1
+mpmath==1.3.0
+multidict==6.7.1
+nest-asyncio==1.6.0
+networkx==3.2.1
+numpy==2.0.2
+openpyxl==3.1.5
+packaging==25.0
+pandas==2.3.3
+parso==0.8.5
+patsy==1.0.2
+pillow==11.3.0
+platformdirs==4.4.0
+prompt_toolkit==3.0.52
+propcache==0.4.1
+psutil==7.1.3
+pure_eval==0.2.3
+Pygments==2.19.2
+pyparsing==3.3.2
+PySocks==1.7.1
+python-dateutil==2.9.0.post0
+pytz==2025.2
+pywin32==311
+pyzmq==27.1.0
+requests==2.32.5
+scikit-learn==1.6.1
+scipy==1.13.1
+six==1.17.0
+soupsieve==2.8.3
+stack-data==0.6.3
+statsmodels==0.14.6
+sympy==1.14.0
+threadpoolctl==3.6.0
+torch==2.8.0+cpu
+torch-geometric==2.6.1
+torch-scatter==2.1.2
+torch-sparse==0.6.18
+torch_geometric_temporal==0.56.2
+tornado==6.5.2
+tqdm==4.67.3
+traitlets==5.14.3
+typing_extensions==4.15.0
+tzdata==2025.2
+urllib3==2.6.3
+wcwidth==0.2.14
+xgboost==2.1.4
+xlrd==2.0.2
+yarl==1.22.0
+zipp==3.23.0
